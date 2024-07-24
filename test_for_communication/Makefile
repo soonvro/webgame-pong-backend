@@ -23,8 +23,12 @@ clean:
 
 fclean:
 	$(COMPOSE) down --rmi all
+
+aclean:
 #	도커 컨테이너 캐시, 종료된 컨테이너, 이미지 삭제하는 명령어
-#	@docker builder prune -f && docker container prune -f && docker image prune -f
+	@echo "Delete docker cache, image, container that stopped"
+	@docker builder prune -f && docker container prune -f && docker image prune -f
+	@echo "Done"
 
 re:
 	@make fclean

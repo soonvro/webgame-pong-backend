@@ -7,23 +7,18 @@
 </head>
 <body>
 	<h1>통신 연습</h1>
-	<button id="fetchButton">Fetch Data</button>
+	<button id="fetchButton">데이터 받아오기</button>
 	<div id="result"></div>
 	<script>
-		document.getElementById('fetchButton').addEventListener('click', () => 
+		document.getElementById('fetchButton').addEventListener('click', async () => 
 		{
-			fetch('http://backend:3000/api')
-			.then(response => response.json())
-			.then(data => 
+			try
 			{
-				const gotData = data.message;
-				if (data.message) document.getElementById('result').innerText = gotData;
-				else document.getElementById('result').innerText = '받은 거 없는데?';
-			})
-			.catch(error =>
-			{
-				console.error('뭔가 오류가 나왔는데?');
-			});
+				const response = await fetch('http://backend:3000/api');
+				const data = await response.json();
+				document.getElementById('result').innerText = data.message;
+			}
+			catch (err) {console.error('Error fetching data:', err);}
 		});
 	</script>
 </body>

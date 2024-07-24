@@ -9,6 +9,8 @@ services:
       - "8080:80"
     depends_on:
       - backend
+    networks:
+      - communication
 
   backend:
     container_name: backend
@@ -16,3 +18,10 @@ services:
     build: ./backend
     ports:
       - "3000:3000"
+    networks:
+      - communication
+
+networks:
+  communication:
+    name: communication
+    driver: bridge

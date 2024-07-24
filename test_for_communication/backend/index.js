@@ -13,7 +13,4 @@ app.get('/api', (req, res) =>
 	console.log(`req's message is ${req.message}`);
 });
 
-app.listen(port_number, () =>
-{
-	console.log(`backend is running on port ${port_number}`);
-});
+app.listen(port_number, () => {console.log(`backend is running on port ${port_number}`);});
