@@ -8,6 +8,6 @@ RUN npm install && npm install cors
 
 COPY . .
 
-CMD ["node", "index.js"]
-
 EXPOSE 3000
+
+CMD ["node", "index.js"]

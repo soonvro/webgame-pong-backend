@@ -4,22 +4,48 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Test for communicatin</title>
+	<style>
+		body
+		{
+			padding-top: 5rem;
+			padding-left: 5rem;
+			background-color: lightgreen;
+		}
+	</style>
 </head>
 <body>
 	<h1>통신 연습</h1>
-	<button id="fetchButton">데이터 받아오기</button>
-	<div id="result"></div>
+	<button id="fetchButton" title="http://localhost:3000/api로 fetch 요청하기">/api로 받아오기</button>
+	<h2 id="result"></h2>
+	<h1>기본 url로 요청 보내보기</h1>
+	<button id="s_button" title="http://localhost:3000/로 fetch 요청하기">/로 받아오기</button>
+	<h2 id="asdf"></h2>
 	<script>
+		const result = document.getElementById('result')
+		const asdf = document.getElementById('asdf')
 		document.getElementById('fetchButton').addEventListener('click', async () => 
 		{
 			try
 			{
-				const response = await fetch('http://backend:3000/api');
+				const response = await fetch('http://localhost:3000/api');
+				if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 				const data = await response.json();
-				document.getElementById('result').innerText = data.message;
+				result.innerText = data.message;
 			}
-			catch (err) {console.error('Error fetching data:', err);}
+			catch (err) {result.innerText = `Error fetching data : ${err.message}`;}
 		});
+		document.getElementById('s_button').addEventListener('click', async () => 
+		{
+			try
+			{
+				const response = await fetch('http://localhost:3000/');
+				if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+				const data = await response.json();
+				asdf.innerText = data.message;
+			}
+			catch (err) {asdf.innerText = `Error fetching data : ${err.message}`;}
+		});
+		console.log("frontend container stand ready!!");
 	</script>
 </body>
 </html>
