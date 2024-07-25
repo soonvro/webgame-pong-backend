@@ -15,19 +15,58 @@
 </head>
 <body>
 	<h1>통신 연습</h1>
-	<button id="fetchButton" title="http://localhost:3000/api로 fetch 요청하기">/api로 받아오기</button>
-	<h2 id="result"></h2>
-	<h1>기본 url로 요청 보내보기</h1>
-	<button id="s_button" title="http://localhost:3000/로 fetch 요청하기">/로 받아오기</button>
-	<h2 id="asdf"></h2>
+	<div>
+		<h1>정보를 3초간 60hz로 받기</h1>
+		<button id="fetchButton" title="http://localhost:3000/api로 fetch 요청하기">시간 초기화</button>
+		<button id="stop_button" title="멈추거나 시간 재는걸 시작하거나">시간 재기 시작</button>
+		<h2 id="result"></h2>
+	</div>
+	<h1>정보 주고 받기</h1>
+	<div>
+		<input class="putin">
+		<input class="putin">
+		<input class="putin">
+		<button id="s_button" title="제출하기">제출하기</button>
+		<h2 id="asdf"></h2>
+	</div>
 	<script>
-		const result = document.getElementById('result')
-		const asdf = document.getElementById('asdf')
+		const result = document.getElementById('result');
+		const asdf = document.getElementById('asdf');
+		const input = document.querySelectorAll('.putin');
+		let count = true;
+		let intervalId; 
+		const count_button = document.getElementById('stop_button');
+		count_button.addEventListener('click', () => 
+		{
+			if (count)
+			{
+				count = false;
+				count_button.innerText = '시간 멈추기';
+				intervalId = setInterval(async () => 
+				{
+					try
+					{
+						const response = await fetch('http://localhost:3000/api');
+						if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+						const data = await response.json();
+						const num = data.message;
+						result.innerText = `${num}frame 경과`;
+					}
+					catch (err) {result.innerText = `Error fetching data : ${err.message}`;}
+				}, 16);
+			}
+			else
+			{
+				count_button.innerText = '시간 재기 시작';
+				count = true;
+				clearInterval(intervalId);
+			}
+		});
 		document.getElementById('fetchButton').addEventListener('click', async () => 
 		{
 			try
 			{
-				const response = await fetch('http://localhost:3000/api');
+				const response = await fetch('http://localhost:3000/reset');
 				if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 				const data = await response.json();
 				result.innerText = data.message;
@@ -36,10 +75,24 @@
 		});
 		document.getElementById('s_button').addEventListener('click', async () => 
 		{
+			if (!input[2].value || !input[1].value || !input[0].value)
+			{
+				asdf.innerText = `3개다 채워야 되지요~~`;
+				return;
+			}
 			try
 			{
-				const response = await fetch('http://localhost:3000/');
-				if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+				const response = await fetch('http://localhost:3000/data', 
+				{
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify(
+						{
+							no1: Number(input[0].value),
+							no2: Number(input[1].value),
+							no3: Number(input[2].value),
+						})
+				});
 				const data = await response.json();
 				asdf.innerText = data.message;
 			}
