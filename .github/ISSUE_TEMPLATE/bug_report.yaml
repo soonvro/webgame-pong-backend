@@ -1,0 +1,62 @@
+name: "🐛 버그 리포트"
+description: 버그를 신고하기 위한 새로운 티켓을 생성합니다.
+title: "🐛 [BUG] - <제목>"
+labels: [
+  "bug"
+]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "설명"
+      description: 문제에 대한 명확한 설명을 입력해주세요
+      placeholder: 문제의 간략하고 명확한 설명...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: "예상 동작"
+      description: 이슈가 발생하지 않았을 때의 예상 동작을 설명해주세요.
+      placeholder: 예상되는 동작의 설명...
+    validations:
+      required: true
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: "현재 동작"
+      description: 현재 발생하는 동작이나 오류를 설명해주세요.
+      placeholder: 실제로 발생하는 동작의 설명...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: "재현 단계"
+      description: 문제를 재현하기 위한 명확한 단계를 입력해주세요
+      value: |
+        1. '...'으로 이동합니다.
+        2. '...'을 클릭합니다.
+        3. '...'으로 스크롤합니다.
+        4. 오류를 확인합니다.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: "스크린샷"
+      description: 적용 가능한 경우, 문제를 설명하는 스크린샷을 추가해주세요.
+      value: |
+        ![설명](링크.png)
+      render: bash
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: "로그"
+      description: 관련 로그 출력을 복사하여 붙여넣어주세요. 이 내용은 자동으로 코드로 포맷됩니다.
+      render: bash
+    validations:
+      required: false
