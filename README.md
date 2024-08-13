@@ -1,10 +1,26 @@
 # ft_transcendence
+## 개발환경 설정
+### 필요한 프로그램
+- Docker
+- make
+- python 3.11.9
+- conda(optional)
+```shell
+# python 가상환경 설정
+conda create -n ft_transcendence python=3.11.9
+# 또는
+python -3.11.9 -m venv ft_transcendence
+
+# 가상환경 활성화 후
+pip install -r Space-Pin-Pong/requirements.txt
+pre-commit install
+```
 
 ## 개요
 42 이너 서클의 마지막 과제 트센.
 
 ## 목적
-웹으로 플레이 할 수 있는 핑퐁 게임을 만들자 
+웹으로 플레이 할 수 있는 핑퐁 게임을 만들자
 
 ## 보너스?
 해보려고 노력은 하되, 깜냥이 안되면 과감히 버립시다.
