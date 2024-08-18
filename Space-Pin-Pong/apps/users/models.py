@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 class UserManager(BaseUserManager):
-    def create_user(self, user_id, nickname, picture, password=''):
+    def create_user(self, user_id, nickname, picture):
         if not user_id:
             raise ValueError('Users must have an user_id')
 
@@ -12,17 +12,11 @@ class UserManager(BaseUserManager):
             picture=picture
         )
 
-        if password:
-            user.set_password(password)
-        else:
-            user.set_unusable_password()
-
         user.save(using=self._db)
         return user
 
 class User(AbstractBaseUser, PermissionsMixin):
-    id = models.AutoField(primary_key=True)
-    user_id = models.CharField(max_length=20, unique=True)
+    user_id = models.CharField(max_length=20, primary_key=True)
     nickname = models.CharField(max_length=20)
     picture = models.URLField(default='https://cdn.vectorstock.com/i/500p/93/68/rocket-glyph-icon-spaceship-isolated-vector-51249368.jpg')
     recommendation = models.IntegerField(default=0)
@@ -30,6 +24,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    USERNAME_FIELD = 'id'
+    USERNAME_FIELD = 'user_id'
+    REQUIRED_FIELDS = ['nickname', 'picture']
 
     objects = UserManager()
+
+    class Meta:
+        db_table = 'users_user'
