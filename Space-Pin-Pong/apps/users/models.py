@@ -31,3 +31,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'users_user'
+
+class Friend(models.Model):
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user2')
+
+    class Meta:
+        unique_together = (('user1', 'user2'),)
+        constraints = [
+            models.UniqueConstraint(fields=['user1', 'user2'], name='unique_friend_pair')
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.user1 > self.user2:
+            self.user1, self.user2 = self.user2, self.user1
+        super().save(*args, **kwargs)
