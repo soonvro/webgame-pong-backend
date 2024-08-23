@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from config.exceptions import EmptyAuthorizationCode, InvalidTokenProvided, ValidationFailed, UserInformationNotExists, DatabaseFailed
+from config import exceptions
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
@@ -30,7 +30,7 @@ class LoginView(APIView):
     def post(self, request):
         code = request.data.get('code')
         if not code:
-            raise EmptyAuthorizationCode
+            raise exceptions.EmptyAuthorizationCode
 
         access_token = utils.get_access_token(code)
 
@@ -50,14 +50,14 @@ class LogoutView(APIView):
             # 추후에 access_token을 10분간 redis 캐시에 블랙리스트 추가하는 방안 추가 예정
             access_token = request.data.get('access_token')
             if not refresh_token or not access_token:
-                raise InvalidTokenProvided
+                raise exceptions.InvalidTokenProvided
             refresh_token.blacklist()
             access_token.blacklist()
             return Response(status=status.HTTP_200_OK)
         except (InvalidToken, TokenError):
-            raise InvalidTokenProvided
+            raise exceptions.InvalidTokenProvided
         except DatabaseError:
-            raise DatabaseFailed
+            raise exceptions.DatabaseFailed
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -65,11 +65,11 @@ class SignupView(APIView):
     def post(self, request):
         code = request.data.get('code')
         if not code:
-            raise EmptyAuthorizationCode
+            raise exceptions.EmptyAuthorizationCode
 
         user_info = cache.get(code)
         if not user_info:
-            raise UserInformationNotExists
+            raise exceptions.UserInformationNotExists
 
         user = utils.create_user(user_info)
 
