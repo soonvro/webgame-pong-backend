@@ -16,4 +16,7 @@ re-local: down-local
 logs-local:
 	docker compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_LOCAL_FILE)  logs -f
 
-.PHONY: up-local down-local re-local logs-local
+mk-requeirements:
+	pip list --format=freeze > requirements.txt
+
+.PHONY: up-local down-local re-local logs-local mk-requeirements
