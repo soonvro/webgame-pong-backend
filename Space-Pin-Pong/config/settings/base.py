@@ -20,16 +20,21 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 
+
 # 기본 유저 모델을 변경
 AUTH_USER_MODEL = 'users.User'
 
-# 환경번수로 추가해야할 것들
-OAUTH_CLIENT_ID = "OAUTH client ID"
-OAUTH_CLIENT_SECRET = "OAUTH client secret"
-OAUTH_REDIRECT_URI = "우리의 리다이렉트 URI"
-OAUTH_AUTHORIZE_URL = "https://api.intra.42.fr/oauth/authorize"
-OAUTH_TOKEN_URL = "https://api.intra.42.fr/oauth/token"
-OAUTH_USER_API_URL = "https://api.intra.42.fr/v2/me"
+
+# ------------------------------------------------------------------------------
+#  OAuth 설정
+# ------------------------------------------------------------------------------
+OAUTH_CLIENT_ID = env('OAUTH_CLIENT_ID')
+OAUTH_CLIENT_SECRET = env('OAUTH_CLIENT_SECRET')
+OAUTH_REDIRECT_URI = env('OAUTH_REDIRECT_URI')
+OAUTH_AUTHORIZE_URL = env('OAUTH_AUTHORIZE_URL')
+OAUTH_TOKEN_URL = env('OAUTH_TOKEN_URL')
+OAUTH_USER_API_URL = env('OAUTH_USER_API_URL')
+
 
 # Redis 캐시 설정
 CACHES = {
@@ -42,6 +47,7 @@ CACHES = {
     }
 }
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -51,7 +57,6 @@ SECRET_KEY = env('SECRET_KEY')
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
