@@ -35,7 +35,7 @@ class LoginView(APIView):
 
         user_info = utils.get_user_info(access_token)
 
-        user = utils.get_user(user_info)
+        user = utils.get_user(code, user_info)
 
         token = utils.create_jwt(user)
         return Response({'token': token}, status=status.HTTP_200_OK)
