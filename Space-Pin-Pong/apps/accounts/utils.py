@@ -32,14 +32,14 @@ def get_user_info(access_token):
     user_info = response.json()
     return user_info
 
-def get_user(self, user_info):
+def get_user(user_info):
     user_id = user_info.get('login')
 
     user = User.objects.filter(user_id=user_id).first()
     if user is None:
-        raise exceptions.UserNotExists
+        raise exceptions.UserNotFound
     if user.activated is False:
-        raise exceptions.UserNotExists
+        raise exceptions.UserNotFound
     return user
 
 def create_user(user_info):
