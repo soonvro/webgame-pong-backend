@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.exceptions import TokenError
 from config import exceptions
 
 from apps.users.models import User
@@ -67,18 +67,3 @@ def create_jwt(user):
     except TokenError as e:
         raise exceptions.JWTTokenCreationFailed
     return token
-
-def refresh_jwt(refresh_token_value):
-    try:
-        old_refresh_token = RefreshToken(refresh_token_value)
-
-        new_refresh_token = RefreshToken.for_user(old_refresh_token.user)
-        token = {
-            'refresh_token': str(new_refresh_token),
-            'access_token': str(new_refresh_token.access_token),
-        }
-        return token
-    except (TokenError, InvalidToken):
-        raise exceptions.InvalidTokenProvided
-    except AttributeError:
-        raise exceptions.UserFromTokenError
