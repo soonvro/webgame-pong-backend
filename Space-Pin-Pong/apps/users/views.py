@@ -70,7 +70,7 @@ class UserFriendView(APIView):
         try:
             friend = User.objects.get(user_id=friend_id)
         except User.DoesNotExist:
-            raise exceptions.UserNotExists
+            raise exceptions.UserNotFound
 
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
@@ -90,7 +90,7 @@ class UserFriendView(APIView):
         try:
             friend = User.objects.get(user_id=friend_id)
         except User.DoesNotExist:
-            raise exceptions.UserNotExists
+            raise exceptions.UserNotFound
 
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
