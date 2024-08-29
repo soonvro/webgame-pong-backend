@@ -2,7 +2,6 @@ import re
 from rest_framework import serializers
 from .models import User, Friend
 from config import exceptions
-from .utils import get_user_from_token
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,10 +18,10 @@ class UserDeleteSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class UserUpdateNicknameSerializer(serializers.ModelSerializer):
+class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['nickname']
+        fields = ['nickname', 'picture']
 
     def validate_nickname(self, value):
         # 닉네임이 3자 이상 30자 이하인지 확인
@@ -33,11 +32,6 @@ class UserUpdateNicknameSerializer(serializers.ModelSerializer):
         if not re.match(r'^[a-zA-Z0-9_-]+$', value):
             raise exceptions.NicknameFormatInvalid
         return value
-
-class UserUpdatePictureSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['picture']
 
 class FriendSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,7 +46,11 @@ class FriendListSerializer(serializers.ModelSerializer):
         fields = ['friend']
 
     def get_friend(self, obj):
-        request_user = get_user_from_token(self.context['request'])
+        request_user = self.request.user
 
-        friend = obj.user2 if obj.user1 == request_user else obj.user1
+        if obj.user1 == request_user:
+            friend = obj.user2
+        elif obj.user2 == request_user:
+            friend = obj.user1
+
         return UserSerializer(friend).data

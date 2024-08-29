@@ -37,7 +37,6 @@ class Friend(models.Model):
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user2')
 
     class Meta:
-        unique_together = (('user1', 'user2'),)
         constraints = [
             models.UniqueConstraint(fields=['user1', 'user2'], name='unique_friend_pair')
         ]

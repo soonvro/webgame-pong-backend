@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -5,11 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import (
     UserSerializer,
     UserDeleteSerializer,
-    UserUpdateNicknameSerializer, 
-    UserUpdatePictureSerializer,
+    UserUpdateSerializer,
     FriendListSerializer,
 )
-from .utils import get_user_from_token, get_user_from_id
 from config import exceptions
 from .models import User, Friend
 
@@ -17,15 +16,14 @@ class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
-        user = get_user_from_id(user_id)
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user_id)
         return Response(serializer.data)
 
 class UserDeactivateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, user_id):
-        user = get_user_from_token(request)
+    def delete(self, request):
+        user = request.user
         serializer = UserDeleteSerializer(user, data={'activated': False})
         if serializer.is_valid():
             serializer.save()
@@ -38,51 +36,36 @@ class UserHistoryView(APIView):
 
     pass
 
-class UserNicknameUpdateView(APIView):
+class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
-        user = get_user_from_token(request)
+        user = request.user
 
-        serializer = UserUpdateNicknameSerializer(user, data=request.data, partial=True)
+        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         raise exceptions.InvalidDataProvided
 
-class UserPictureUpdateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def patch(self, request):
-        user = get_user_from_token(request)
-
-        serializer = UserUpdatePictureSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        raise exceptions.InvalidDataProvided
-
-class UserFriendsListView(APIView):
+class UserFriendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = get_user_from_token(request)
+        user = request.user
 
-        friends_as_user1 = Friend.objects.filter(user1=user)
-        friends_as_user2 = Friend.objects.filter(user2=user)
+        # Q 객체를 사용하여 user1 또는 user2가 현재 사용자의 친구들을 필터링
+        friends = Friend.objects.filter(
+            Q(user1=user) | Q(user2=user)
+        )
 
-        all_friends = friends_as_user1 | friends_as_user2
-
-        serialized_friends = FriendListSerializer(all_friends, many=True, context={'request': request}).data
+        # 직렬화하여 응답으로 반환
+        serialized_friends = FriendListSerializer(friends, many=True, context={'request': request}).data
 
         return Response({'friends_list': serialized_friends})
 
-
-class UserFriendAddView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def post(self, request, friend_id):
-        user = get_user_from_token(request)
+        user = request.user
 
         try:
             friend = User.objects.get(user_id=friend_id)
@@ -101,11 +84,8 @@ class UserFriendAddView(APIView):
         Friend.objects.create(user1=user, user2=friend)
         return Response(status=status.HTTP_201_CREATED)
 
-class UserFriendDeleteView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def delete(self, request, friend_id):
-        user = get_user_from_token(request)
+        user = request.user
 
         try:
             friend = User.objects.get(user_id=friend_id)
