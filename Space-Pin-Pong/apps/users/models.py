@@ -29,9 +29,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    class Meta:
-        db_table = 'users_user'
-
 class Friend(models.Model):
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user1')
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user2')

@@ -16,9 +16,9 @@ class UserInformationFetchFailed(APIException):
     default_detail = '서버가 42 API로부터 유저 정보를 가져오는데 실패했습니다.'
     default_code = '003'
 
-class UserNotExists(APIException):
+class UserNotFound(APIException):
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = '해당 유저가 존재하지 않습니다.'
+    default_detail = '해당 유저를 찾을 수 없습니다.'
     default_code = '004'
 
 class JWTTokenCreationFailed(APIException):
