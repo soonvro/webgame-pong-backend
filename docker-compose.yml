@@ -5,11 +5,13 @@ services:
     build:
       context: ./Space-Pin-Pong
       dockerfile: Dockerfile
+    restart: always
     depends_on:
       - db
 
   db:
     image: postgres:15.7-bookworm
+    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
