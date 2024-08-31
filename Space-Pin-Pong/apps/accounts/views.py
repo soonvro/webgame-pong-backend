@@ -1,13 +1,14 @@
-from django.db import DatabaseError
 from django.conf import settings
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from config.exceptions import EmptyAuthorizationCode, InvalidTokenProvided, ValidationFailed, UserInformationNotExists, DatabaseFailed
-from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from config import exceptions
+from .serializers import CustomTokenRefreshSerializer
+from rest_framework_simplejwt.views import TokenViewBase
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 from . import utils
 
@@ -30,13 +31,13 @@ class LoginView(APIView):
     def post(self, request):
         code = request.data.get('code')
         if not code:
-            raise EmptyAuthorizationCode
+            raise exceptions.EmptyAuthorizationCode
 
         access_token = utils.get_access_token(code)
 
         user_info = utils.get_user_info(access_token)
 
-        user = utils.get_user(user_info)
+        user = utils.get_user(code, user_info)
 
         token = utils.create_jwt(user)
         return Response({'token': token}, status=status.HTTP_200_OK)
@@ -46,18 +47,15 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-            refresh_token = request.data.get('refresh_token')
-            # 추후에 access_token을 10분간 redis 캐시에 블랙리스트 추가하는 방안 추가 예정
-            access_token = request.data.get('access_token')
-            if not refresh_token or not access_token:
-                raise InvalidTokenProvided
-            refresh_token.blacklist()
-            access_token.blacklist()
-            return Response(status=status.HTTP_200_OK)
-        except (InvalidToken, TokenError):
-            raise InvalidTokenProvided
-        except DatabaseError:
-            raise DatabaseFailed
+            refresh_token = request.data['refresh_token']
+            refresh = RefreshToken(refresh_token)
+            # access token을 redis를 활용하여 blacklist에 추가할지 클라이언트에서 처리할지 결정해야 함
+
+            refresh.blacklist()
+        except TokenError:
+            raise exceptions.InvalidTokenProvided # 추후 수정 필요
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -65,11 +63,11 @@ class SignupView(APIView):
     def post(self, request):
         code = request.data.get('code')
         if not code:
-            raise EmptyAuthorizationCode
+            raise exceptions.EmptyAuthorizationCode
 
         user_info = cache.get(code)
         if not user_info:
-            raise UserInformationNotExists
+            raise exceptions.UserInformationNotExists
 
         user = utils.create_user(user_info)
 
@@ -77,12 +75,7 @@ class SignupView(APIView):
 
         return Response({'token': token}, status=status.HTTP_200_OK)
 
-class CustomTokenRefreshView(APIView):
-    permission_classes = [IsAuthenticated]
+class CustomTokenRefreshView(TokenViewBase):
+    permission_classes = [AllowAny]
 
-    def post(self, request):
-        refresh_token = request.data.get('refresh_token')
-
-        new_token = utils.refresh_jwt(refresh_token)
-
-        return Response({'token': new_token}, status=status.HTTP_200_OK)
+    serializer_class = CustomTokenRefreshSerializer

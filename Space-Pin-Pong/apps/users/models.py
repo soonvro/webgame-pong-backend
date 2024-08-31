@@ -28,6 +28,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['nickname', 'picture']
 
     objects = UserManager()
-
-    class Meta:
-        db_table = 'users_user'
