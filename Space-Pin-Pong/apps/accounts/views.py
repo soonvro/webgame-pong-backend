@@ -9,7 +9,6 @@ from .serializers import CustomTokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-
 from . import utils
 
 class LoginView(APIView):
