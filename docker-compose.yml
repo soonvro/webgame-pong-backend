@@ -15,6 +15,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
+  cache:
+    image: redis:7.4.0
+
+
 volumes:
   postgres_data:
   django_logs:

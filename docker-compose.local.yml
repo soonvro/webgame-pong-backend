@@ -11,6 +11,7 @@ services:
     env_file:
       - ./env/.env.app.local
       - ./env/.env.db.local
+      - ./env/.env.cache.local
 
   db:
     ports:
@@ -18,3 +19,6 @@ services:
     env_file:
       - ./env/.env.db.local
 
+  cache:
+    ports:
+      - "56379:6379"
