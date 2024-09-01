@@ -71,6 +71,7 @@ INSTALLED_APPS = [
 
     'apps.users',
     'apps.accounts',
+    'apps.games',
 
     'rest_framework',
     'rest_framework_simplejwt',
