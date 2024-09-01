@@ -1,10 +1,11 @@
 #!/bin/sh
 
-apt update
-apt install -y openssh-server
-passwd root
-echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-service ssh start
+F_WHITE='\033[38;5;15m'  # foreground white
+B_PURPLE='\033[48;5;200m'  # background purple
+NC='\033[0m' # No Color
+SPEAKER="${F_WHITE}${B_PURPLE}|+_+|${NC}"
 
-echo "Running Space-Pin-Pong Dev Server"
-python manage.py runserver 0.0.0.0:8000
+DJANGO_CMD="python manage.py runserver 0.0.0.0:8000"
+
+/bin/echo -e "${SPEAKER} Running Space-Pin-Pong Dev Server"
+exec $DJANGO_CMD
