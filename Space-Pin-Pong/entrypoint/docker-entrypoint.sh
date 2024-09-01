@@ -9,7 +9,4 @@ SPEAKER="${F_WHITE}${B_PURPLE}|+_+|${NC}"
 python manage.py makemigrations
 python manage.py migrate
 
-SCRIPT_DIRECTORY="$(dirname $(realpath "$0"))"
-/bin/sh $SCRIPT_DIRECTORY/docker-entrypoint.${DJANGO_ENV}.sh
-
 exec "$@"
