@@ -29,6 +29,7 @@ nodeenv==1.9.1
 pip==24.2
 platformdirs==4.2.2
 pre-commit==3.8.0
+psycopg2==2.9.9
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pycparser==2.22
