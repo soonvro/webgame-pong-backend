@@ -15,7 +15,6 @@ from . import utils
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
-    # 42 OAuth 인증 페이지로의 redirect_url 반환
     def get(self, request):
         request_data = {
             "client_id": settings.OAUTH_CLIENT_ID,
@@ -26,7 +25,7 @@ class LoginView(APIView):
             f"{settings.OAUTH_AUTHORIZE_URL}?client_id={request_data['client_id']}"
             f"&redirect_uri={request_data['redirect_uri']}&response_type={request_data['response_type']}"
         )
-        return Response({"redirect_url": redirect_url})
+        return Response({'message': 'redirect url 생성 성공', 'data': redirect_url})
 
     def post(self, request):
         code = request.data.get('code')
@@ -34,13 +33,11 @@ class LoginView(APIView):
             raise exceptions.EmptyAuthorizationCode
 
         access_token = utils.get_access_token(code)
-
         user_info = utils.get_user_info(access_token)
-
         user = utils.get_user(code, user_info)
-
         token = utils.create_jwt(user)
-        return Response({'token': token}, status=status.HTTP_200_OK)
+
+        return Response({'message': '로그인 성공', 'data': token}, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -49,13 +46,11 @@ class LogoutView(APIView):
         try:
             refresh_token = request.data['refresh_token']
             refresh = RefreshToken(refresh_token)
-            # access token을 redis를 활용하여 blacklist에 추가할지 클라이언트에서 처리할지 결정해야 함
-
             refresh.blacklist()
         except TokenError:
-            raise exceptions.InvalidTokenProvided # 추후 수정 필요
+            raise exceptions.InvalidTokenProvided
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': '로그아웃 성공'}, status=status.HTTP_204_NO_CONTENT)
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -70,10 +65,9 @@ class SignupView(APIView):
             raise exceptions.UserInformationNotExists
 
         user = utils.create_user(user_info)
-
         token = utils.create_jwt(user)
 
-        return Response({'token': token}, status=status.HTTP_200_OK)
+        return Response({'message': '회원가입 및 로그인 성공', 'data': token}, status=status.HTTP_200_OK)
 
 class CustomTokenRefreshView(TokenViewBase):
     permission_classes = [AllowAny]

@@ -10,7 +10,12 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        return {
+        token = {
             'refresh_token': data.get('refresh'),
             'access_token': data['access'],
+        }
+
+        return {
+            'message': '토큰 갱신 성공',
+            'data': token,
         }
