@@ -17,6 +17,7 @@ services:
 
   cache:
     image: redis:7.4.0
+    restart: always
 
 
 volumes:
