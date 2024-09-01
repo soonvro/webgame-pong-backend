@@ -11,6 +11,7 @@ services:
       - ./env/.env.app.local
       - ./env/.env.db.local
       - ./env/.env.cache.local
+    command: /app/entrypoint/docker-entrypoint.local.sh
 
   db:
     ports:
