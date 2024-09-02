@@ -36,21 +36,33 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class FriendSerializer(serializers.ModelSerializer):
     class Meta:
         model = Friend
-        fields = ['user1', 'user2']
+        fields = ['user1', 'user2', 'status']
+
+class UserFriendDetailSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='user_id')  # user_id를 id로 변경
+    nickName = serializers.CharField(source='nickname')  # nickname을 nickName으로 변경
+    online = serializers.BooleanField(default=True)  # 하드코딩된 값 추가
+
+    class Meta:
+        model = User
+        fields = ['id', 'nickName', 'online']
 
 class FriendListSerializer(serializers.ModelSerializer):
-    friend = serializers.SerializerMethodField()
+    friend = UserFriendDetailSerializer(source='get_friend', read_only=True)
 
     class Meta:
         model = Friend
         fields = ['friend']
 
-    def get_friend(self, obj):
-        request_user = self.request.user
-
-        if obj.user1 == request_user:
-            friend = obj.user2
-        elif obj.user2 == request_user:
-            friend = obj.user1
-
-        return UserSerializer(friend).data
+    def to_representation(self, instance):
+        # 현재 사용자 정보를 가져옵니다.
+        request_user = self.context['request'].user
+        
+        # Friend 모델의 get_friend 메소드를 호출합니다.
+        friend_user = instance.get_friend(request_user)
+        
+        # UserFriendDetailSerializer를 사용하여 직렬화합니다.
+        serializer = UserFriendDetailSerializer(friend_user)
+        
+        # 직렬화된 데이터를 반환합니다.
+        return (serializer.data)
