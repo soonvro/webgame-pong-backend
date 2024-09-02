@@ -26,6 +26,7 @@ idna==3.7
 incremental==24.7.2
 Markdown==3.6
 nodeenv==1.9.1
+numpy==2.1.0
 pip==24.2
 platformdirs==4.2.2
 pre-commit==3.8.0
