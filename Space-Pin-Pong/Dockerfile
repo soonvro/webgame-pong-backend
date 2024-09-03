@@ -3,16 +3,19 @@ FROM python:3.11.9-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED 1
 
+RUN apt update && apt upgrade -y && apt install -y \
+        dumb-init \
+    && pip install --upgrade pip
+
 WORKDIR /app
 
 COPY requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
-RUN chmod +x ./entrypoint/docker-entrypoint.sh
+RUN chmod -R +x ./entrypoint
 
 EXPOSE 8000
 
-ENTRYPOINT ["./entrypoint/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "./entrypoint/docker-entrypoint.sh"]

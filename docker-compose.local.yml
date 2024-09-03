@@ -4,13 +4,14 @@ services:
   app:
     ports:
       - "58000:8000"
-      - "50022:22"
     volumes:
       - ./Space-Pin-Pong:/app
-      - /app/entrypoint
+      - /app/entrypoint  # entrypoint.sh의 권한 문제로 바인드 마운트 방지
     env_file:
       - ./env/.env.app.local
       - ./env/.env.db.local
+      - ./env/.env.redis.local
+    command: /app/entrypoint/docker-entrypoint.local.sh
 
   db:
     ports:
@@ -18,3 +19,6 @@ services:
     env_file:
       - ./env/.env.db.local
 
+  redis:
+    ports:
+      - "56379:6379"

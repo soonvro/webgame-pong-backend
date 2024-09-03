@@ -29,5 +29,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+class Friend(models.Model):
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user2')
+    status = models.CharField(max_length=20, choices=[
+        ('pending', '보류 중'),
+        ('accept', '수락'),
+        ('reject', '거절')
+    ], default='보류 중')
+
     class Meta:
-        db_table = 'users_user'
+        constraints = [
+            models.UniqueConstraint(fields=['user1', 'user2'], name='unique_friend_pair')
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.user1.user_id > self.user2.user_id:
+            self.user1, self.user2 = self.user2, self.user1
+        super().save(*args, **kwargs)
+
+    def get_friend(self, user): 
+        if self.user1 == user:
+            return self.user2
+        return self.user1
