@@ -71,6 +71,7 @@ INSTALLED_APPS = [
 
     'apps.users',
     'apps.accounts',
+    'apps.notifications',
 
     'rest_framework',
     'rest_framework_simplejwt',
