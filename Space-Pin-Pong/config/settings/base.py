@@ -71,6 +71,7 @@ INSTALLED_APPS = [
 
     'apps.users',
     'apps.accounts',
+    'apps.notifications',
 
     'rest_framework',
     'rest_framework_simplejwt',
@@ -178,3 +179,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ------------------------------------------------------------------------------
+#  channels 설정
+# ------------------------------------------------------------------------------
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(env('REDIS_HOST'), env.int('REDIS_PORT'))],
+        },
+    },
+}
