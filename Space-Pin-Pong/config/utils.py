@@ -15,6 +15,7 @@ def custom_exception_handler(exc, context) -> Response:
         return Response(custom_response_data, status=exc.status_code)
 
     # Shouldn't reach here, but if it does, return a generic error message
+    print(exc)
     custom_response_data['error_code'] = "000"
     custom_response_data['error_message'] = "Unknown error occurred"
     return Response(custom_response_data, status=HTTP_500_INTERNAL_SERVER_ERROR)
