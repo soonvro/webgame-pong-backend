@@ -13,6 +13,7 @@ from .serializers import (
 )
 from config import exceptions
 from .models import User, Friend
+from apps.notifications.utils import create_notification
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
@@ -85,13 +86,13 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend.user_id:
-            user, friend = friend, user
-
-        if Friend.objects.filter(user1=user, user2=friend).exists():
+        if Friend.objects.filter(user1=user, user2=friend).exists() or Friend.objects.filter(user1=friend, user2=user).exists():
             raise exceptions.FriendAlreadyExists
 
         Friend.objects.create(user1=user, user2=friend)
+
+        create_notification(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request')
+
         return Response({"message": "친구 추가 요청 성공"}, status=status.HTTP_201_CREATED)
 
     def delete(self, request, friend_id):

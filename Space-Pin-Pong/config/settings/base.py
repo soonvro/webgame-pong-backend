@@ -38,7 +38,7 @@ OAUTH_USER_API_URL = env('OAUTH_USER_API_URL')
 # ------------------------------------------------------------------------------
 #  Redis 캐시 설정
 # ------------------------------------------------------------------------------
-REDIS_URI = 'redis://' + env('REDIS_HOST') + env('REDIS_PORT') + '/0'
+REDIS_URI = 'redis://' + env('REDIS_HOST') + ':' + env('REDIS_PORT') + '/0'
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.notifications',
 
+    'channels',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',

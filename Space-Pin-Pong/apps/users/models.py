@@ -37,6 +37,7 @@ class Friend(models.Model):
         ('accept', '수락'),
         ('reject', '거절')
     ], default='보류 중')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
