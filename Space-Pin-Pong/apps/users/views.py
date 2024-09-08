@@ -48,7 +48,9 @@ class UserUpdateView(APIView):
     def put(self, request):
         user = request.user
 
-        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
+        data = request.data.copy()
+        data['nickname'] = data.get('nickName')
+        serializer = UserUpdateSerializer(user, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "유저 정보 수정 성공", "data": serializer.data})
@@ -86,7 +88,7 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if Friend.objects.filter(user1=user, user2=friend).exists() or Friend.objects.filter(user1=friend, user2=user).exists():
+        if Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).exists():
             raise exceptions.FriendAlreadyExists
 
         Friend.objects.create(user1=user, user2=friend)
@@ -106,10 +108,7 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend.user_id:
-            user, friend = friend, user
-
-        friendship = Friend.objects.filter(user1=user, user2=friend).first()
+        friendship = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
 
         if not friendship:
             raise exceptions.FriendNotExists
@@ -129,10 +128,7 @@ class FriendAcceptView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend_id:
-            user, friend = friend, user
-
-        friendship = Friend.objects.filter(user1=friend, user2=user).first()
+        friendship = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
         if not friendship:
             raise exceptions.FriendNotExists
 
@@ -143,6 +139,7 @@ class FriendAcceptView(APIView):
 
         if serializer.is_valid():
             serializer.save()
+            create_notification(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 수락했습니다.', 'alert.basic')
             return Response({"message": "친구 요청 수락 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
@@ -158,10 +155,7 @@ class FriendRejectView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend_id:
-            user, friend = friend, user
-
-        friendship = Friend.objects.filter(user1=friend, user2=user).first()
+        friendship = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
         if not friendship:
             raise exceptions.FriendNotExists
 
@@ -172,5 +166,6 @@ class FriendRejectView(APIView):
 
         if serializer.is_valid():
             serializer.save()
+            create_notification(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 거절했습니다.', 'alert.basic')
             return Response({"message": "친구 요청 거절 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
