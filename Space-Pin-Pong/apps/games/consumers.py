@@ -1,54 +1,28 @@
 import asyncio
 import json
 
+from apps.games.services import PongGameManager
 from channels.generic.websocket import AsyncWebsocketConsumer
-
-from apps.games.utils import distance_line_point
 
 
 class LocalGameConsumer(AsyncWebsocketConsumer):
-    game_fps: int = 60
-    size_magnification: int = 1000
+    _fps: int = 60
+    _frame_time: float = 1 / float(_fps)
 
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
-        self.field_width: int = 500 * self.size_magnification
-        self.field_height: int = 250 * self.size_magnification
-        self.bar_width: int = 10 * self.size_magnification
-        self.bar_height: int = 100 * self.size_magnification
-        self.ball_radius: int = 7 * self.size_magnification
-        self.ball_speed: int = 1000 * self.size_magnification // self.game_fps  # pixel per frame
-        self.player_speed: int = 200 * self.size_magnification // self.game_fps  # pixel per frame
-
-        self.ball_pos_x: int = self.field_width // 2
-        self.ball_pos_y: int = self.field_height // 2
-        self.ball_velocity_x: int = self.ball_speed // 2
-        self.ball_velocity_y: int = self.ball_speed // 4
-
-        self.player1_pos_x: int = self.bar_width * 2
-        self.player1_pos_y: int = self.field_height // 2
-
-        self.player2_pos_x: int = self.field_width - (self.bar_width * 2)
-        self.player2_pos_y: int = self.field_height // 2
-
-        self.player1_score: int = 0
-        self.player2_score: int = 0
-
-        self.player1_direction: str = "n"
-        self.player2_direction: str = "n"
-
-        self.direction_queue_lock = asyncio.Lock()
-
+        self._game_manager: PongGameManager = PongGameManager()
+        self._game_task: asyncio.Task | None = None
+        self._wait_delay: int = 0
 
     async def connect(self):
+        self._game_task = asyncio.create_task(self.game_loop())
         await self.accept()
 
-        await asyncio.create_task(self.loop_game())
-
     async def disconnect(self, close_code):
-        pass
+        await self._game_manager.shutdown()
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
         """
         이 메소드는 서버가 클라이언트로부터 메시지를 받았을 때 호출됩니다.
         메시지는 JSON 형식으로 전달되며, 다음과 같은 형식을 가지고 있습니다:
@@ -61,80 +35,64 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
         """
         text_data_json = json.loads(text_data)
         message_type = text_data_json["type"]
-        if message_type == "move":
-            player1_direction, player2_direction = text_data_json["directions"]
-            await self.update_player_direction(player1_direction, player2_direction)
+        if message_type == "games.inputs":
+            player1_direction, player2_direction = text_data_json["inputs"]
+            player1_direction = "u" if player1_direction == "r" else "d" if player1_direction == "l" else "n"
+            player2_direction = "u" if player2_direction == "r" else "d" if player2_direction == "l" else "n"
+            await self._game_manager.move_paddle((player1_direction, player2_direction))
 
-    async def update_player_direction(self, player1_direction: str, player2_direction: str) -> None:
-        async with self.direction_queue_lock:
-            self.player1_direction = player1_direction
-            self.player2_direction = player2_direction
+    async def game_loop(self):
+        """
+        이 메소드는 게임 루프를 나타냅니다.
+        게임 루프는 게임이 종료될 때까지 계속해서 반복됩니다.
+        """
+        self._wait_delay = 3
+        while self._wait_delay > 0:
+            await self.send(self._serialize_game_state(self._game_manager.state))
+            await asyncio.sleep(1)
+            self._wait_delay -= 1
 
-    async def loop_game(self):
+        self._game_manager.start()
+        frame_count: int = 0
+        is_turn_over: bool = False
         while True:
-            await self.update_game_state()
-            await asyncio.sleep(1 / self.game_fps)
+            game_state: dict = self._game_manager.state
+            if game_state["state"] == PongGameManager.State.TURN_OVER:
+                if not is_turn_over:
+                    is_turn_over = True
+                    self._wait_delay = 3
+                elif self._wait_delay == 0:
+                    is_turn_over = False
+                    await self._game_manager.resume()
 
-    async def update_game_state(self):
-        async with self.direction_queue_lock:
-            await self.update_player_position()
+            await self.send(self._serialize_game_state(game_state))
 
-        await self.update_ball_position()
-        print(f"ball: ({self.ball_pos_x}, {self.ball_pos_y}), score: ({self.player1_score}, {self.player2_score})")
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "type": "stateUpdate",
-                    "ball": [self.ball_pos_x, self.ball_pos_y],
-                    "score": [self.player1_score, self.player2_score],
-                }
-            )
-        )
+            if game_state["state"] == PongGameManager.State.ENDED:
+                break
+            await asyncio.sleep(self._frame_time)
 
-    async def update_player_position(self):
-        if self.player1_direction == "l":
-            self.player1_pos_y += self.player_speed
-        elif self.player1_direction == "r":
-            self.player1_pos_y -= self.player_speed
-        self.player1_direction = "n"
+            frame_count += 1
+            if frame_count == self._fps:
+                frame_count = 0
+                if self._wait_delay > 0:
+                    self._wait_delay -= 1
 
-        if self.player2_direction == "l":
-            self.player2_pos_y -= self.player_speed
-        elif self.player2_direction == "r":
-            self.player2_pos_y += self.player_speed
-        self.player2_direction = "n"
+    def _serialize_game_state(self, game_state: dict) -> str:
+        """
+        게임 상태를 JSON 형식으로 직렬화합니다.
+        """
+        wait_state = 2
+        if game_state["state"] == PongGameManager.State.TURN_OVER:
+            wait_state = 1
+        elif game_state["state"] == PongGameManager.State.STARTED:
+            wait_state = 0
 
-    async def update_ball_position(self) -> None:
-        self.ball_pos_x += self.ball_velocity_x
-        self.ball_pos_y += self.ball_velocity_y
-
-        if self.is_ball_hit_vertical_wall():
-            if self.ball_pos_x <= self.ball_radius:
-                self.player2_score += 1
-            else:
-                self.player1_score += 1
-        if self.is_ball_hit_bar():
-            self.ball_velocity_x *= -1
-        if self.is_ball_hit_horizontal_wall():
-            self.ball_velocity_y *= -1
-
-
-    def is_ball_hit_horizontal_wall(self) -> bool:
-        return (self.ball_pos_y <= self.ball_radius
-                or self.ball_pos_y >= self.field_height - self.ball_radius)
-
-    def is_ball_hit_bar(self) -> bool:
-        bar1_top: int = self.player1_pos_y + self.bar_height // 2
-        bar1_bottom: int = self.player1_pos_y - self.bar_height // 2
-        bar2_top: int = self.player2_pos_y + self.bar_height // 2
-        bar2_bottom: int = self.player2_pos_y - self.bar_height // 2
-
-        bar1 = (self.player1_pos_x, bar1_top, self.player1_pos_x, bar1_bottom)
-        bar2 = (self.player2_pos_x, bar2_top, self.player2_pos_x, bar2_bottom)
-
-        return (distance_line_point(bar1, (self.ball_pos_x, self.ball_pos_y)) <= self.ball_radius
-                or distance_line_point(bar2, (self.ball_pos_x, self.ball_pos_y)) <= self.ball_radius)
-
-    def is_ball_hit_vertical_wall(self) -> bool:
-        return (self.ball_pos_x <= self.ball_radius
-                or self.ball_pos_x >= self.field_width - self.ball_radius)
+        data: dict = {
+            "type": "games.state",
+            "finish": game_state["state"] == PongGameManager.State.ENDED,
+            "bar": game_state["paddle_y"],
+            "ball": game_state["ball"],
+            "score": game_state["score"],
+            "wait": [wait_state, self._wait_delay],
+        }
+        return json.dumps(data)
