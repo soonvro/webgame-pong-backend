@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from apps.games.services import PongGameManager
+from apps.games.services import PongGameEngine
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 
@@ -11,7 +11,7 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
-        self._game_manager: PongGameManager = PongGameManager()
+        self._game_manager: PongGameEngine = PongGameEngine()
         self._game_task: asyncio.Task | None = None
         self._wait_delay: int = 0
 
@@ -57,7 +57,7 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
         is_turn_over: bool = False
         while True:
             game_state: dict = self._game_manager.state
-            if game_state["state"] == PongGameManager.State.TURN_OVER:
+            if game_state["state"] == PongGameEngine.State.TURN_OVER:
                 if not is_turn_over:
                     is_turn_over = True
                     self._wait_delay = 3
@@ -67,7 +67,7 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
 
             await self.send(self._serialize_game_state(game_state))
 
-            if game_state["state"] == PongGameManager.State.ENDED:
+            if game_state["state"] == PongGameEngine.State.ENDED:
                 break
             await asyncio.sleep(self._frame_time)
 
@@ -82,14 +82,14 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
         게임 상태를 JSON 형식으로 직렬화합니다.
         """
         wait_state = 2
-        if game_state["state"] == PongGameManager.State.TURN_OVER:
+        if game_state["state"] == PongGameEngine.State.TURN_OVER:
             wait_state = 1
-        elif game_state["state"] == PongGameManager.State.STARTED:
+        elif game_state["state"] == PongGameEngine.State.STARTED:
             wait_state = 0
 
         data: dict = {
             "type": "games.state",
-            "finish": game_state["state"] == PongGameManager.State.ENDED,
+            "finish": game_state["state"] == PongGameEngine.State.ENDED,
             "bar": game_state["paddle_y"],
             "ball": game_state["ball"],
             "score": game_state["score"],

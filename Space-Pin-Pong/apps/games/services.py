@@ -211,7 +211,7 @@ class Ball(GameObject):
         return self._radius
 
 
-class PongGameManager:
+class PongGameEngine:
     X_MIN_IDX = 0
     Y_MIN_IDX = 1
     X_MAX_IDX = 2
