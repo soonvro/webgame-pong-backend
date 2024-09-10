@@ -50,7 +50,7 @@ class LogoutView(APIView):
         except TokenError:
             raise exceptions.InvalidTokenProvided
 
-        return Response({'message': '로그아웃 성공'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': '로그아웃 성공'}, status=status.HTTP_200_OK)
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
