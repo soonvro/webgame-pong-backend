@@ -10,10 +10,10 @@ application = ProtocolTypeRouter(
         "http": get_asgi_application(),
         "websocket": JWTAuthMiddleware(
             AuthMiddlewareStack(
-                URLRouter(
+                URLRouter([
                     *notification_websocket_urlpatterns,
                     *user_websocket_urlpatterns
-                )
+                ])
             )
         ),
     }
