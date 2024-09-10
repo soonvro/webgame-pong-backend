@@ -21,9 +21,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             self.channel_name,
         )
 
-    async def receive(self, text_data):
-        pass
-
     async def send_pending_notifications(self):
         # 처리되지 않은 알림들을 전송
         notifications = Notification.objects.filter(user=self.user, status=False)
