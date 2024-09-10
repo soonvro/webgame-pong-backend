@@ -1,9 +1,10 @@
 from urllib.parse import parse_qs
 from channels.db import database_sync_to_async
-from django.conf import settings
+from config.settings import base as settings
 import jwt
 from apps.users.models import User
 from config import exceptions
+from channels.middleware import BaseMiddleware
 
 @database_sync_to_async
 def get_user(user_id):
@@ -12,9 +13,9 @@ def get_user(user_id):
     except User.DoesNotExist:
         raise exceptions.UserNotFound
 
-class JWTAuthMiddleware:
+class JWTAuthMiddleware(BaseMiddleware):
     def __init__(self, inner):
-        self.inner = inner
+        super().__init__(inner)
 
     async def __call__(self, scope, receive, send):
         query_string = scope['query_string'].decode()
@@ -33,5 +34,4 @@ class JWTAuthMiddleware:
         else:
             raise exceptions.TokenNotProvided
 
-        inner = self.inner(scope)
-        return await inner(receive, send)
+        return await super().__call__(scope, receive, send)

@@ -24,3 +24,18 @@ def create_notification(user, message, notification_type):
     )
 
     return notification
+
+@database_sync_to_async
+def get_notifications(user):
+    # 알림을 리스트로 만들어 한 번에 전송하는 방식
+    notification_list = []
+    notifications = Notification.objects.filter(user=user, status=False)
+    # 모든 알림을 리스트에 추가
+    for notification in notifications:
+        notification_list.append({
+            'type': notification.type,
+            'id': notification.id,
+            'message': notification.message,
+        })
+
+    return notification_list
