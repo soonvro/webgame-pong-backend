@@ -10,7 +10,7 @@ services:
     env_file:
       - ./env/.env.app.local
       - ./env/.env.db.local
-      - ./env/.env.cache.local
+      - ./env/.env.redis.local
     command: /app/entrypoint/docker-entrypoint.local.sh
 
   db:
@@ -19,6 +19,6 @@ services:
     env_file:
       - ./env/.env.db.local
 
-  cache:
+  redis:
     ports:
       - "56379:6379"
