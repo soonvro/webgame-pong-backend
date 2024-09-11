@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from apps.games.services import PongGameEngine
+from apps.games.services import PongGameManager
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 
@@ -11,13 +11,16 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
-        self._game_manager: PongGameEngine = PongGameEngine()
+        self._game_manager: PongGameManager = PongGameManager()
         self._game_task: asyncio.Task | None = None
+        self._send_task: asyncio.Task | None = None
         self._wait_delay: int = 0
 
     async def connect(self):
-        self._game_task = asyncio.create_task(self.game_loop())
         await self.accept()
+
+        self._game_task = asyncio.create_task(self._game_manager.game_loop())
+        self._send_task = asyncio.create_task(self._send_loop())
 
     async def disconnect(self, close_code):
         await self._game_manager.shutdown()
@@ -41,58 +44,8 @@ class LocalGameConsumer(AsyncWebsocketConsumer):
             player2_direction = "u" if player2_direction == "r" else "d" if player2_direction == "l" else "n"
             await self._game_manager.move_paddle((player1_direction, player2_direction))
 
-    async def game_loop(self):
+    async def _send_loop(self):
         """
-        이 메소드는 게임 루프를 나타냅니다.
-        게임 루프는 게임이 종료될 때까지 계속해서 반복됩니다.
+        이 메소드는 게임의 상태를 클라이언트에 전송하는 루프입니다.
         """
-        self._wait_delay = 3
-        while self._wait_delay > 0:
-            await self.send(self._serialize_game_state(self._game_manager.state))
-            await asyncio.sleep(1)
-            self._wait_delay -= 1
-
-        self._game_manager.start()
-        frame_count: int = 0
-        is_turn_over: bool = False
-        while True:
-            game_state: dict = self._game_manager.state
-            if game_state["state"] == PongGameEngine.State.TURN_OVER:
-                if not is_turn_over:
-                    is_turn_over = True
-                    self._wait_delay = 3
-                elif self._wait_delay == 0:
-                    is_turn_over = False
-                    await self._game_manager.resume()
-
-            await self.send(self._serialize_game_state(game_state))
-
-            if game_state["state"] == PongGameEngine.State.ENDED:
-                break
-            await asyncio.sleep(self._frame_time)
-
-            frame_count += 1
-            if frame_count == self._fps:
-                frame_count = 0
-                if self._wait_delay > 0:
-                    self._wait_delay -= 1
-
-    def _serialize_game_state(self, game_state: dict) -> str:
-        """
-        게임 상태를 JSON 형식으로 직렬화합니다.
-        """
-        wait_state = 2
-        if game_state["state"] == PongGameEngine.State.TURN_OVER:
-            wait_state = 1
-        elif game_state["state"] == PongGameEngine.State.STARTED:
-            wait_state = 0
-
-        data: dict = {
-            "type": "games.state",
-            "finish": game_state["state"] == PongGameEngine.State.ENDED,
-            "bar": game_state["paddle_y"],
-            "ball": game_state["ball"],
-            "score": game_state["score"],
-            "wait": [wait_state, self._wait_delay],
-        }
-        return json.dumps(data)
+        await self.send(text_data=json.dumps(self._game_manager.get_game_state()))
