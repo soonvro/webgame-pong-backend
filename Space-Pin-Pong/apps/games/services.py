@@ -239,6 +239,7 @@ class PongGameEngine:
         paddle_speed: int = 500,  # grid per second
         max_score: int = 15,
         on_start: Callable[[], None] = (lambda: None),
+        on_turn_over: Callable[[], None] = (lambda: None),
         on_end: Callable[[], None] = (lambda: None),
     ):
         if not isinstance(ball_radius, int):
@@ -327,6 +328,7 @@ class PongGameEngine:
         self._right_paddle_score: int = 0
 
         self._on_start: Callable[[], None] = on_start
+        self._on_turn_over: Callable[[], None] = on_turn_over
         self._on_end: Callable[[], None] = on_end
 
         self._is_paused: bool = False
@@ -466,6 +468,7 @@ class PongGameEngine:
         self._init_paddles_state()
         await self.pause()
         self._is_turn_over = True
+        self._on_turn_over()
         return True
 
     def _check_collision_ball_paddle_future(self) -> None:
@@ -532,3 +535,85 @@ class PongGameEngine:
                 paddle.set_velocity(0, 0)
             else:
                 raise ValueError("direction must be 'u', 'd', or 'n'")
+
+
+class PongGameManager:
+    class BallSpeed(Enum):
+        SLOW = 500
+        NORMAL = 1000
+        FAST = 1500
+
+    class PaddleSpeed(Enum):
+        SLOW = 500
+        NORMAL = 1000
+        FAST = 1500
+
+    def __init__(
+        self,
+        ball_speed: BallSpeed = BallSpeed.NORMAL,  # grid per second
+        paddle_speed: PaddleSpeed = PaddleSpeed.NORMAL,  # grid per second
+        max_score: int = 15,
+        wait_delay: int = 3,
+    ):
+        self._game_engine: PongGameEngine = PongGameEngine(
+            ball_speed=ball_speed.value,
+            paddle_speed=paddle_speed.value,
+            max_score=max_score,
+        )
+        self._wait_delay: int = wait_delay
+        self._remaining_delay: int = wait_delay
+
+        self._game_engine_state: dict = {}
+
+    async def move_paddle(self, directions: tuple[str, str]) -> None:
+        await self._game_engine.move_paddle(directions)
+
+    async def shutdown(self):
+        await self._game_engine.shutdown()
+
+    async def game_loop(self):
+        """
+        이 메소드는 게임 루프를 나타냅니다.
+        게임 루프는 게임이 종료될 때까지 계속해서 반복됩니다.
+        """
+        self._remaining_delay = self._wait_delay
+        while self._remaining_delay > 0:
+            await asyncio.sleep(1)
+            self._remaining_delay -= 1
+
+        self._game_engine.start()
+        is_turn_over: bool = False
+        while True:
+            self._game_engine_state = self._game_engine.state
+            if self._game_engine_state["state"] == PongGameEngine.State.TURN_OVER:
+                if not is_turn_over:
+                    is_turn_over = True
+                    self._remaining_delay = 3
+                elif self._remaining_delay == 0:
+                    is_turn_over = False
+                    await self._game_engine.resume()
+                else:
+                    await asyncio.sleep(1)
+                    self._remaining_delay -= 1
+                continue
+
+            if self._game_engine_state["state"] == PongGameEngine.State.ENDED:
+                break
+            await asyncio.sleep(0.1)
+
+    def get_game_state(self) -> dict:
+        wait_state = 2
+        if self._game_engine_state["state"] == PongGameEngine.State.TURN_OVER:
+            wait_state = 1
+        elif self._game_engine_state["state"] == PongGameEngine.State.STARTED:
+            wait_state = 0
+
+        ret: dict = {
+            "type": "games.state",
+            "finish": self._game_engine_state["state"] == PongGameEngine.State.ENDED,
+            "bar": self._game_engine_state["paddle_y"],
+            "ball": self._game_engine_state["ball"],
+            "score": self._game_engine_state["score"],
+            "wait": [wait_state, self._remaining_delay],
+        }
+        return ret
