@@ -38,11 +38,11 @@ OAUTH_USER_API_URL = env("OAUTH_USER_API_URL")
 # ------------------------------------------------------------------------------
 #  Redis 캐시 설정
 # ------------------------------------------------------------------------------
-REDIS_URI = "redis://" + env("REDIS_HOST") + ":" + env("REDIS_PORT") + "/0"
+CACHE_URI = f"redis://{env('REDIS_HOST')}:{env('REDIS_PORT')}/{env('REDIS_DB_CACHE')}"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_URI,
+        "LOCATION": CACHE_URI,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -180,11 +180,21 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ------------------------------------------------------------------------------
 #  channels 설정
 # ------------------------------------------------------------------------------
+CHANNEL_URL = f"redis://{env('REDIS_HOST')}:{env('REDIS_PORT')}/{env('REDIS_DB_CHANNEL')}"
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(env("REDIS_HOST"), env.int("REDIS_PORT"))],
+            "hosts": [
+                {
+                    "address": CHANNEL_URL,
+                }
+            ]
         },
     },
 }
+
+# ------------------------------------------------------------------------------
+#  game session storage 설정
+# ------------------------------------------------------------------------------
+GAME_SESSION_URL = f"redis://{env('REDIS_HOST')}:{env('REDIS_PORT')}/{env('REDIS_DB_GAME_SESSION')}"
