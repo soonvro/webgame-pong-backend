@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.users",
     "apps.accounts",
+    "apps.notifications",
     "apps.games",
     "rest_framework",
     "rest_framework_simplejwt",
@@ -76,12 +77,13 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "EXCEPTION_HANDLER": "config.utils.custom_exception_handler",
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10 * 1000),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -176,6 +178,13 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ------------------------------------------------------------------------------
-#  Channels 설정
+#  channels 설정
 # ------------------------------------------------------------------------------
-CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(env("REDIS_HOST"), env.int("REDIS_PORT"))],
+        },
+    },
+}
