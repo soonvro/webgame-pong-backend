@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from apps.games.services import PongGameManager
+from apps.games.services.pong_game_engine import PongGameManager
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 
