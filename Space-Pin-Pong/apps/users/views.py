@@ -49,7 +49,8 @@ class UserUpdateView(APIView):
         user = request.user
 
         data = request.data.copy()
-        data['nickname'] = data.get('nickName')
+        if 'nickName' in data:
+            data['nickname'] = data.get('nickName')
         serializer = UserUpdateSerializer(user, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
