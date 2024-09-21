@@ -33,7 +33,7 @@ class UserDeactivateView(APIView):
         serializer = UserDeleteSerializer(user, data={'activated': False})
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
 # game 모델 추가 후 수정 필요
