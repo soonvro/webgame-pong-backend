@@ -89,8 +89,12 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).exists():
-            raise exceptions.FriendAlreadyExists
+        is_friend = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend))
+        if is_friend.exists():
+            if is_friend.first().status == 'accept':
+                raise exceptions.FriendAlreadyExists
+            elif is_friend.first().status == 'pending':
+                raise exceptions.FriendRequestAlreadySent
 
         Friend.objects.create(user1=user, user2=friend)
 

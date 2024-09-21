@@ -105,3 +105,8 @@ class PermissionDenied(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = '권한이 없습니다.'
     default_code = '021'
+
+class FriendRequestAlreadySent(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = '이미 친구 요청을 보낸 상태입니다.'
+    default_code = '022'
