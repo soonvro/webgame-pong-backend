@@ -14,11 +14,6 @@ class UserDeleteSerializer(serializers.ModelSerializer):
         model = User
         fields = ['activated']
 
-    def update(self, instance, validated_data):
-        instance.activated = validated_data.get('activated', instance.activated)
-        instance.save()
-        return instance
-
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

@@ -18,7 +18,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.CharField(max_length=20, primary_key=True)
     nickname = models.CharField(max_length=20)
-    picture = models.URLField(default='https://cdn.vectorstock.com/i/500p/93/68/rocket-glyph-icon-spaceship-isolated-vector-51249368.jpg')
+    picture = models.CharField(max_length=2083)
     recommendation = models.IntegerField(default=0)
     activated = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -33,7 +33,7 @@ class UserDeactivateView(APIView):
         serializer = UserDeleteSerializer(user, data={'activated': False})
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
 # game 모델 추가 후 수정 필요
@@ -49,7 +49,8 @@ class UserUpdateView(APIView):
         user = request.user
 
         data = request.data.copy()
-        data['nickname'] = data.get('nickName')
+        if 'nickName' in data:
+            data['nickname'] = data.get('nickName')
         serializer = UserUpdateSerializer(user, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -88,8 +89,12 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).exists():
-            raise exceptions.FriendAlreadyExists
+        is_friend = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend))
+        if is_friend.exists():
+            if is_friend.first().status == 'accept':
+                raise exceptions.FriendAlreadyExists
+            elif is_friend.first().status == 'pending':
+                raise exceptions.FriendRequestAlreadySent
 
         Friend.objects.create(user1=user, user2=friend)
 
