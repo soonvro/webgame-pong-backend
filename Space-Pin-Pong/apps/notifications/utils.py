@@ -1,10 +1,9 @@
-from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
 from .models import Notification
 
 channel_layer = get_channel_layer()
 
-@database_sync_to_async
+# @database_sync_to_async
 def create_and_send_notifications(user, message, notification_type):
     # 알림 데이터베이스에 저장
     Notification.objects.create(
@@ -24,7 +23,7 @@ def create_and_send_notifications(user, message, notification_type):
         }
     )
 
-@database_sync_to_async
+# @database_sync_to_async
 def get_notifications(user):
     # 알림을 리스트로 만들어 한 번에 전송하는 방식
     notification_list = []
@@ -36,5 +35,4 @@ def get_notifications(user):
             'id': notification.id,
             'message': notification.message,
         })
-
     return notification_list
