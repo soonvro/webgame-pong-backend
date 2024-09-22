@@ -43,3 +43,16 @@ class RemoteGameInfo(models.Model):
         db_table = "remote_game_info"
         verbose_name = "Remote Game Info"
         verbose_name_plural = "Remote Game Info"
+
+
+class LocalGameInfo(models.Model):
+    game: models.OneToOneField = models.OneToOneField("GameHistory", on_delete=models.CASCADE)
+    user: models.ForeignKey = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user_score: models.IntegerField = models.IntegerField()
+    opponent_name: models.CharField = models.CharField(max_length=255, default="anonymous")
+    opponent_score: models.IntegerField = models.IntegerField()
+
+    class Meta:
+        db_table = "local_game_info"
+        verbose_name = "Local Game Info"
+        verbose_name_plural = "Local Game Info"
