@@ -5,7 +5,7 @@ from .models import Notification
 channel_layer = get_channel_layer()
 
 @database_sync_to_async
-def create_notification(user, message, notification_type):
+def create_and_send_notifications(user, message, notification_type):
     # 알림 데이터베이스에 저장
     notification = Notification.objects.create(
         user=user,

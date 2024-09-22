@@ -110,3 +110,8 @@ class FriendRequestAlreadySent(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = '이미 친구 요청을 보낸 상태입니다.'
     default_code = '022'
+
+class UserDeactivated(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = '탈퇴한 사용자입니다.'
+    default_code = '023'
