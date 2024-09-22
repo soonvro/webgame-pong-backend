@@ -56,3 +56,24 @@ class LocalGameInfo(models.Model):
         db_table = "local_game_info"
         verbose_name = "Local Game Info"
         verbose_name_plural = "Local Game Info"
+
+
+class Tournament(models.Model):
+    created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
+    ended_at: models.DateTimeField = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = "tournament"
+        verbose_name = "Tournament"
+        verbose_name_plural = "Tournaments"
+
+
+class TournamentGame(models.Model):
+    game: models.ForeignKey = models.ForeignKey("GameHistory", on_delete=models.CASCADE)
+    tournament: models.ForeignKey = models.ForeignKey("Tournament", on_delete=models.CASCADE)
+    round_number: models.IntegerField = models.IntegerField()
+
+    class Meta:
+        db_table = "tournament_game"
+        verbose_name = "Tournament Game"
+        verbose_name_plural = "Tournament Games"
