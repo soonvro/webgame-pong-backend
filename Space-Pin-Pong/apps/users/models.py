@@ -30,13 +30,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
 class Friend(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_ACCEPT = 'accept'
+    STATUS_REJECT = 'reject'
+
+    FRIEND_STATUS_CHOICES = [
+        (STATUS_PENDING, '보류 중'),
+        (STATUS_ACCEPT, '수락'),
+        (STATUS_REJECT, '거절'),
+    ]
+
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user1')
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='friends_as_user2')
-    status = models.CharField(max_length=20, choices=[
-        ('pending', '보류 중'),
-        ('accept', '수락'),
-        ('reject', '거절')
-    ], default='보류 중')
+    status = models.CharField(max_length=20, choices=FRIEND_STATUS_CHOICES, default=STATUS_PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
