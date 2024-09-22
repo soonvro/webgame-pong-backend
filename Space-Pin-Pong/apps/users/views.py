@@ -13,7 +13,7 @@ from .serializers import (
 )
 from config import exceptions
 from .models import User, Friend
-from apps.notifications.utils import create_notification
+from apps.notifications.utils import create_and_send_notifications
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
@@ -89,16 +89,16 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        is_friend = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend))
-        if is_friend.exists():
-            if is_friend.first().status == 'accept':
+        is_friend = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
+        if is_friend:
+            if is_friend.status  == 'accept':
                 raise exceptions.FriendAlreadyExists
-            elif is_friend.first().status == 'pending':
+            elif is_friend.status == 'pending':
                 raise exceptions.FriendRequestAlreadySent
 
         Friend.objects.create(user1=user, user2=friend)
 
-        create_notification(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request')
+        create_and_send_notifications(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request.friend')
 
         return Response({"message": "친구 추가 요청 성공"}, status=status.HTTP_201_CREATED)
 
@@ -144,7 +144,7 @@ class FriendAcceptView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            create_notification(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 수락했습니다.', 'alert.basic')
+            create_and_send_notifications(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 수락했습니다.', 'alert.basic')
             return Response({"message": "친구 요청 수락 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
@@ -171,6 +171,6 @@ class FriendRejectView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            create_notification(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 거절했습니다.', 'alert.basic')
+            create_and_send_notifications(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 거절했습니다.', 'alert.basic')
             return Response({"message": "친구 요청 거절 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
