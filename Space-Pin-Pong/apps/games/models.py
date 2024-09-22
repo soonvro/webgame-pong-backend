@@ -19,9 +19,9 @@ class GameMode(Enum):
 
 
 class GameHistory(models.Model):
-    start_time = models.DateTimeField()  # type: ignore
-    end_time = models.DateTimeField()  # type: ignore
-    game_mode = models.CharField(  # type: ignore
+    start_time: models.DateTimeField = models.DateTimeField()
+    end_time: models.DateTimeField = models.DateTimeField()
+    game_mode: models.CharField = models.CharField(
         max_length=20,
         choices=GameMode.choices(),
         default=GameMode.LOCAL.value,
