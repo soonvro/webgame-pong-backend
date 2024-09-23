@@ -3,10 +3,11 @@ from .models import Notification
 
 channel_layer = get_channel_layer()
 
-def create_and_send_notifications(user, message, notification_type):
+def create_and_send_notifications(user, from_user, message, notification_type):
     # 알림 데이터베이스에 저장
     Notification.objects.create(
         user=user,
+        from_user=from_user,
         type=notification_type,
         message=message
     )
@@ -32,5 +33,6 @@ def get_notifications(user):
             'type': notification.type,
             'id': notification.id,
             'message': notification.message,
+            'friendId': notification.from_user.user_id,
         })
     return notification_list

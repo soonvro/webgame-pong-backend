@@ -8,7 +8,8 @@ class Notification(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications_received')
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications_sent')
     message = models.TextField()
     type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     status = models.BooleanField(default=False)
