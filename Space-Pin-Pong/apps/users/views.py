@@ -98,7 +98,7 @@ class UserFriendView(APIView):
 
         Friend.objects.create(user1=user, user2=friend)
 
-        create_and_send_notifications(friend, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request.friend')
+        create_and_send_notifications(friend, user, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request.friend')
 
         return Response({"message": "친구 추가 요청 성공"}, status=status.HTTP_201_CREATED)
 
