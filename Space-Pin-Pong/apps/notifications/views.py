@@ -14,7 +14,7 @@ class NotificationUpdateView(APIView):
         user = request.user
         notification_id = request.data.get('id')
 
-        notification = Notification.objects.filter(user=user, status=False, id=notification_id).first()
+        notification = Notification.objects.filter(user=user, status=True, id=notification_id).first()
         if not notification:
             raise exceptions.NotificationNotFound
         serializer = NotificationUpdateSerializer(notification, data=request.data, partial=True)
