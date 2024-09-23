@@ -119,7 +119,7 @@ class UserFriendView(APIView):
             raise exceptions.FriendNotExists
 
         friendship.delete()
-        return Response({"message": "친구 삭제 성공"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "친구 삭제 성공"}, status=status.HTTP_200_OK)
  
 class FriendAcceptView(APIView):
     permission_classes = [IsAuthenticated]

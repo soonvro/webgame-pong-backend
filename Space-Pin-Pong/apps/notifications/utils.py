@@ -1,5 +1,6 @@
 from channels.layers import get_channel_layer
 from .models import Notification
+from asgiref.sync import async_to_sync
 
 channel_layer = get_channel_layer()
 
@@ -15,7 +16,7 @@ def create_and_send_notifications(user, from_user, message, notification_type):
     notification_list = get_notifications(user)
 
     # 웹소켓이 연결되어 있는 경우 실시간 알림 전송
-    channel_layer.group_send(
+    async_to_sync(channel_layer.group_send)(
         f'notification_{user.user_id}',
         {
             'type': 'notifications',

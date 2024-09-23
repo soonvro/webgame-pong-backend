@@ -1,12 +1,13 @@
 from channels.generic.websocket import WebsocketConsumer
 import json
 from . import utils
+from asgiref.sync import async_to_sync
 
 class NotificationConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope["user"]
 
-        self.channel_layer.group_add(
+        async_to_sync(self.channel_layer.group_add)(
             f'notification_{self.user.user_id}',
             self.channel_name,
         )
@@ -15,7 +16,7 @@ class NotificationConsumer(WebsocketConsumer):
         self.send_pending_notifications()
 
     def disconnect(self, close_code):
-        self.channel_layer.group_discard(
+        async_to_sync(self.channel_layer.group_discard)(
             f'notification_{self.user.user_id}',
             self.channel_name,
         )
@@ -27,3 +28,7 @@ class NotificationConsumer(WebsocketConsumer):
             'type': 'notifications',
             'data': notification_list
         }))
+
+    def notifications(self, event):
+        # 알림을 전송
+        self.send(text_data=json.dumps(event))
