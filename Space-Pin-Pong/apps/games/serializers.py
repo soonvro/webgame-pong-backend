@@ -1,5 +1,7 @@
 from typing import Any
 
+from config.exceptions import UserNotFound
+from django.contrib.auth import get_user_model
 from django.db.models import Subquery
 from rest_framework import serializers
 
@@ -7,6 +9,8 @@ from .models import (GameHistory, GameMode, RemoteGameInfo, Tournament,
                      TournamentGame)
 from .services.game_statistics.game_statistics import (get_remote_game_ratio,
                                                        get_tournament_ratio)
+
+User = get_user_model()
 
 
 class RemoteGameInfoSerializer(serializers.ModelSerializer):
@@ -99,6 +103,9 @@ class TournamentSerializer(serializers.Serializer):
 class GameStatisticsSerializer:
     @classmethod
     def get_statistics(cls, user_id: str) -> dict[str, Any]:
+        if not User.objects.filter(user_id=user_id).exists():
+            raise UserNotFound()
+
         user_games = RemoteGameInfo.objects.filter(user__user_id=user_id).values("game")
         tournaments = Tournament.objects.filter(tournamentgame__game__in=Subquery(user_games)).distinct()
         ret = {
