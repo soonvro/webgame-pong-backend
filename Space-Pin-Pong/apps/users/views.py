@@ -13,6 +13,7 @@ from .serializers import (
 )
 from config import exceptions
 from .models import User, Friend
+from apps.notifications.utils import create_and_send_notifications
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
@@ -32,7 +33,7 @@ class UserDeactivateView(APIView):
         serializer = UserDeleteSerializer(user, data={'activated': False})
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
 # game 모델 추가 후 수정 필요
@@ -47,7 +48,10 @@ class UserUpdateView(APIView):
     def put(self, request):
         user = request.user
 
-        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
+        data = request.data.copy()
+        if 'nickName' in data:
+            data['nickname'] = data.get('nickName')
+        serializer = UserUpdateSerializer(user, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "유저 정보 수정 성공", "data": serializer.data})
@@ -85,13 +89,17 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend.user_id:
-            user, friend = friend, user
-
-        if Friend.objects.filter(user1=user, user2=friend).exists():
-            raise exceptions.FriendAlreadyExists
+        is_friend = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
+        if is_friend:
+            if is_friend.status  == 'accept':
+                raise exceptions.FriendAlreadyExists
+            elif is_friend.status == 'pending':
+                raise exceptions.FriendRequestAlreadySent
 
         Friend.objects.create(user1=user, user2=friend)
+
+        create_and_send_notifications(friend, user, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request.friend')
+
         return Response({"message": "친구 추가 요청 성공"}, status=status.HTTP_201_CREATED)
 
     def delete(self, request, friend_id):
@@ -105,16 +113,13 @@ class UserFriendView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend.user_id:
-            user, friend = friend, user
-
-        friendship = Friend.objects.filter(user1=user, user2=friend).first()
+        friendship = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
 
         if not friendship:
             raise exceptions.FriendNotExists
 
         friendship.delete()
-        return Response({"message": "친구 삭제 성공"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "친구 삭제 성공"}, status=status.HTTP_200_OK)
  
 class FriendAcceptView(APIView):
     permission_classes = [IsAuthenticated]
@@ -128,22 +133,20 @@ class FriendAcceptView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend_id:
-            user, friend = friend, user
-
-        friendship = Friend.objects.filter(user1=friend, user2=user).first()
+        friendship = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
         if not friendship:
             raise exceptions.FriendNotExists
 
         if friendship.status != 'pending':
             raise exceptions.FriendAlreadyExists
 
-        serializer = FriendSerializer(friendship, data={'status': 'accept'}, partial=True).is_valid(raise_exception=True)
+        serializer = FriendSerializer(friendship, data={'status': 'accept'}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "친구 요청 수락 성공"}, status=status.HTTP_200_OK)
-        raise exceptions.InvalidDataProvided
+        create_and_send_notifications(friend, user, f'{user.nickname}#{user.user_id}님이 친구 요청을 수락했습니다.', 'alert.basic')
+
+        return Response({"message": "친구 요청 수락 성공"}, status=status.HTTP_200_OK)
 
 class FriendRejectView(APIView):
     permission_classes = [IsAuthenticated]
@@ -157,19 +160,17 @@ class FriendRejectView(APIView):
         if user.user_id == friend_id:
             raise exceptions.SelfFriendRequest
 
-        if user.user_id > friend_id:
-            user, friend = friend, user
-
-        friendship = Friend.objects.filter(user1=friend, user2=user).first()
+        friendship = Friend.objects.filter(Q(user1=friend, user2=user) | Q(user1=user, user2=friend)).first()
         if not friendship:
             raise exceptions.FriendNotExists
 
         if friendship.status != 'pending':
             raise exceptions.FriendAlreadyExists
 
-        serializer = FriendSerializer(friendship, data={'status': 'reject'}, partial=True).is_valid(raise_exception=True)
+        serializer = FriendSerializer(friendship, data={'status': 'reject'}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "친구 요청 거절 성공"}, status=status.HTTP_200_OK)
-        raise exceptions.InvalidDataProvided
+        create_and_send_notifications(friend, user, f'{user.nickname}#{user.user_id}님이 친구 요청을 거절했습니다.', 'alert.basic')
+
+        return Response({"message": "친구 요청 거절 성공"}, status=status.HTTP_200_OK)
