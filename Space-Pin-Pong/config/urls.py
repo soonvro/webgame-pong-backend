@@ -23,5 +23,6 @@ urlpatterns = [
 
     path('accounts/', include('apps.accounts.urls')),
     path('users/', include('apps.users.urls')),
+    path('games/', include('apps.games.urls')),
     # path(')
 ]
