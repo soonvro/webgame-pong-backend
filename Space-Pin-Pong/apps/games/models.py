@@ -33,11 +33,18 @@ class GameHistory(models.Model):
         verbose_name_plural = "게임 기록"
 
 
+class RemoteGameInfoManager(models.Manager):
+    def where_game_mode(self, game_mode: GameMode):
+        return self.filter(game__game_mode=game_mode.value)
+
+
 class RemoteGameInfo(models.Model):
     game: models.ForeignKey = models.ForeignKey("GameHistory", on_delete=models.CASCADE)
     user: models.ForeignKey = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score: models.IntegerField = models.IntegerField()
     is_winner: models.BooleanField = models.BooleanField()
+
+    objects = RemoteGameInfoManager()
 
     class Meta:
         db_table = "remote_game_info"
@@ -68,12 +75,32 @@ class Tournament(models.Model):
         verbose_name_plural = "Tournaments"
 
 
+class TournamentGameManager(models.Manager):
+    def where_round_number(self, round_number: int):
+        if round_number not in TournamentGame.ROUNDS:
+            raise ValueError(f"Round number must be one of {TournamentGame.ROUNDS}")
+        return self.filter(round_number=round_number)
+
+
 class TournamentGame(models.Model):
     game: models.ForeignKey = models.ForeignKey("GameHistory", on_delete=models.CASCADE)
     tournament: models.ForeignKey = models.ForeignKey("Tournament", on_delete=models.CASCADE)
     round_number: models.IntegerField = models.IntegerField()
 
+    ROUNDS = [2, 4]
+
+    objects = TournamentGameManager()
+
     class Meta:
         db_table = "tournament_game"
         verbose_name = "Tournament Game"
         verbose_name_plural = "Tournament Games"
+
+    # validate round_number
+    def save(self, *args, **kwargs):
+        self.validate_round_number()
+        super().save(*args, **kwargs)
+
+    def validate_round_number(self):
+        if self.round_number not in self.ROUNDS:
+            raise ValueError(f"Round number must be one of {self.ROUNDS}")
