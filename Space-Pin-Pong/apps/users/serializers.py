@@ -1,7 +1,10 @@
 import re
 
+from rest_framework import serializers
+
 from config import exceptions
 from django.core.cache import cache
+from .models import User, Friend
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
