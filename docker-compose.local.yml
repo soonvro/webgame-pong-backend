@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     ports:
@@ -18,7 +16,13 @@ services:
       - "55432:5432"
     env_file:
       - ./env/.env.db.local
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data/
 
   redis:
     ports:
       - "56379:6379"
+
+volumes:
+  postgres_data_local:
+  django_logs_local:

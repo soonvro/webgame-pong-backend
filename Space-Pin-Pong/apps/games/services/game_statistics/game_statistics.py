@@ -37,4 +37,4 @@ def get_tournament_ratio(user_id: str) -> list[int]:
     )
     lose_round_4 = total_games - winning_round_2 - winning_round_4
 
-    return [winning_round_2, winning_round_4, lose_round_4]
+    return [winning_round_2, winning_round_4 - winning_round_2, lose_round_4]
