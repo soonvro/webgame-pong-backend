@@ -34,7 +34,7 @@ def get_tournament_ratio(user_id: str) -> list[int]:
         TournamentGame.objects.where_round_number(4)  # type: ignore[attr-defined]
         .filter(game__remotegameinfo__user__user_id=user_id, game__remotegameinfo__is_winner=True)
         .count()
-    )
+    ) - winning_round_2
     lose_round_4 = total_games - winning_round_2 - winning_round_4
 
     return [winning_round_2, winning_round_4, lose_round_4]
