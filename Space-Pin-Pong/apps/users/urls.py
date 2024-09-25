@@ -1,12 +1,7 @@
 from django.urls import path
-from .views import (
-    UserInfoView,
-    UserUpdateView,
-    UserFriendView,
-    UserDeactivateView,
-    FriendAcceptView,
-    FriendRejectView,
-)
+
+from .views import (FriendAcceptView, FriendRejectView, UserDeactivateView,
+                    UserFriendView, UserInfoView, UserUpdateView)
 
 urlpatterns = [
     path('nickname/', UserUpdateView.as_view()), # PUT 요청
