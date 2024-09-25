@@ -36,11 +36,6 @@ class UserDeactivateView(APIView):
             return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
-# game 모델 추가 후 수정 필요
-# class UserHistoryView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     pass
-
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser]
@@ -63,12 +58,10 @@ class UserFriendView(APIView):
     def get(self, request):
         user = request.user
 
-        # Q 객체를 사용하여 user1 또는 user2가 현재 사용자의 친구들을 필터링
         friends = Friend.objects.filter(
             Q(user1=user, status='accept') | Q(user2=user, status='accept')
         )
 
-        # 직렬화하여 응답으로 반환
         serialized_friends = FriendListSerializer(friends, many=True, context={'request': request}).data
 
         return Response({
