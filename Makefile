@@ -22,7 +22,7 @@ logs-local:
 	docker compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_LOCAL_FILE)  logs -f
 
 command-app-local:
-	docker compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_LOCAL_FILE) run $(SERVICE_APP) python manage.py $(CMD)
+	docker compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_LOCAL_FILE) exec $(SERVICE_APP) python manage.py $(CMD)
 
 mk-requeirements:
 	pip list --format=freeze > $(APP_DIR)/requirements.txt
