@@ -100,35 +100,48 @@ class FriendAlreadyExists(APIException):
 
 class FriendNotExists(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = '친구로 추가되지 않은 사용자입니다.'
-    default_code = '017'
+    default_detail = "친구로 추가되지 않은 사용자입니다."
+    default_code = "017"
+
 
 class TokenNotProvided(APIException):
     status_code = status.HTTP_401_UNAUTHORIZED
-    default_detail = '토큰이 제공되지 않았습니다.'
-    default_code = '018'
+    default_detail = "토큰이 제공되지 않았습니다."
+    default_code = "018"
+
 
 class NotificationNotFound(APIException):
     status_code = status.HTTP_404_NOT_FOUND
-    default_detail = '해당 알림을 찾을 수 없습니다.'
-    default_code = '019'
+    default_detail = "해당 알림을 찾을 수 없습니다."
+    default_code = "019"
+
 
 class NotificationAlreadyDone(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = '이미 처리된 알림입니다.'
-    default_code = '020'
+    default_detail = "이미 처리된 알림입니다."
+    default_code = "020"
+
 
 class PermissionDenied(APIException):
     status_code = status.HTTP_403_FORBIDDEN
-    default_detail = '권한이 없습니다.'
-    default_code = '021'
+    default_detail = "권한이 없습니다."
+    default_code = "021"
+
 
 class FriendRequestAlreadySent(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = '이미 친구 요청을 보낸 상태입니다.'
-    default_code = '022'
+    default_detail = "이미 친구 요청을 보낸 상태입니다."
+    default_code = "022"
+
 
 class UserDeactivated(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = '탈퇴한 사용자입니다.'
-    default_code = '023'
+    default_detail = "탈퇴한 사용자입니다."
+    default_code = "023"
+
+
+# 유저가 이미 실행중인 게임이 있을 때
+class UserAlreadyInGame(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "이미 게임을 진행 중인 사용자입니다."
+    default_code = "701"
