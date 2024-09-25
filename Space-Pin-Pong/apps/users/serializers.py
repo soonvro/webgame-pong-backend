@@ -1,10 +1,7 @@
 import re
 
 from config import exceptions
-from rest_framework import serializers
-
-from .models import Friend, User
-
+from django.core.cache import cache
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,11 +13,6 @@ class UserDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["activated"]
-
-    def update(self, instance, validated_data):
-        instance.activated = validated_data.get("activated", instance.activated)
-        instance.save()
-        return instance
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -46,14 +38,18 @@ class FriendSerializer(serializers.ModelSerializer):
 
 
 class UserFriendDetailSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source="user_id")  # user_id를 id로 변경
-    nickName = serializers.CharField(source="nickname")  # nickname을 nickName으로 변경
-    online = serializers.BooleanField(default=True)  # 하드코딩된 값 추가
+    id = serializers.CharField(source='user_id')  # user_id를 id로 변경
+    nickName = serializers.CharField(source='nickname')  # nickname을 nickName으로 변경
+    online = serializers.SerializerMethodField()  # 온라인 상태를 캐시에서 가져오는 필드로 변경
 
     class Meta:
         model = User
         fields = ["id", "nickName", "online"]
 
+
+    # 캐시에서 유저의 온라인 상태를 조회. 기본값은 False (오프라인)
+    def get_online(self, obj):
+        return cache.get(f'user_online_{obj.user_id}', False)
 
 class FriendListSerializer(serializers.ModelSerializer):
     friend = UserFriendDetailSerializer(source="get_friend", read_only=True)

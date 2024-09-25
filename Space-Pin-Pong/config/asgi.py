@@ -1,23 +1,20 @@
-"""
-ASGI config for config project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
-"""
-
-from apps.games.routing import websocket_urlpatterns
+from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
-
-django_asgi_app = get_asgi_application()
+from apps.notifications.routing import notification_websocket_urlpatterns
+from apps.users.routing import user_websocket_urlpatterns
+from apps.notifications.authentication import JWTAuthMiddleware
 
 application = ProtocolTypeRouter(
     {
-        # Django's ASGI application to handle traditional HTTP requests
-        "http": django_asgi_app,
-        # WebSocket handler
-        "websocket": URLRouter(websocket_urlpatterns),
+        "http": get_asgi_application(),
+        "websocket": JWTAuthMiddleware(
+            AuthMiddlewareStack(
+                URLRouter([
+                    *notification_websocket_urlpatterns,
+                    *user_websocket_urlpatterns
+                ])
+            )
+        ),
     }
 )

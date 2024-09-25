@@ -41,7 +41,7 @@ def get_user(code, user_info):
         cache.set(code, user_info, timeout=60*5)
         raise exceptions.UserNotFound
     if user.activated is False:
-        raise exceptions.UserNotFound
+        raise exceptions.UserDeactivated
     return user
 
 def create_user(user_info):
