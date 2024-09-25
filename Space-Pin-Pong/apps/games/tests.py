@@ -5,13 +5,13 @@ from apps.games.models import (GameHistory, GameMode, RemoteGameInfo,
                                Tournament, TournamentGame)
 from apps.games.views import retrieve_game_statistics
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase as DjangoTestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 User = get_user_model()
 
 
-class GameStatisticsTestCase(TestCase):
+class GameStatisticsTestCase(DjangoTestCase):
     def setUp(self):
         User.objects.create(user_id="olivia", nickname="nick")
         User.objects.create(user_id="totoro", nickname="nick")
@@ -63,4 +63,3 @@ class GameStatisticsTestCase(TestCase):
         force_authenticate(request, user=user)
         response = view(request, user_id="olivia")
         self.assertEqual(response.status_code, 200, response.data)
-        print(json.dumps(response.data, sort_keys=True, indent=2, ensure_ascii=False))
