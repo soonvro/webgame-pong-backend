@@ -95,8 +95,12 @@ class UserFriendView(APIView):
                 raise exceptions.FriendAlreadyExists
             elif is_friend.status == 'pending':
                 raise exceptions.FriendRequestAlreadySent
-
-        Friend.objects.create(user1=user, user2=friend)
+            elif is_friend.status == 'reject':
+                serializer = FriendSerializer(is_friend, data={"status": "pending"}, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+        else:
+            Friend.objects.create(user1=user, user2=friend)
 
         create_and_send_notifications(friend, user, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request.friend')
 
