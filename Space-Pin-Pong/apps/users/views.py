@@ -1,5 +1,8 @@
+from config import exceptions
 from django.db.models import Q
 from rest_framework import status
+from rest_framework.parsers import JSONParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -23,14 +26,15 @@ class UserInfoView(APIView):
         if not user:
             raise exceptions.UserNotFound
         serializer = UserSerializer(user)
-        return Response({"message": "유저 정보 조회 성공" , "data": serializer.data})
+        return Response({"message": "유저 정보 조회 성공", "data": serializer.data})
+
 
 class UserDeactivateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
         user = request.user
-        serializer = UserDeleteSerializer(user, data={'activated': False})
+        serializer = UserDeleteSerializer(user, data={"activated": False})
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
@@ -52,24 +56,18 @@ class UserUpdateView(APIView):
             return Response({"message": "유저 정보 수정 성공", "data": serializer.data})
         raise exceptions.InvalidDataProvided
 
+
 class UserFriendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
 
-        friends = Friend.objects.filter(
-            Q(user1=user, status='accept') | Q(user2=user, status='accept')
-        )
+        friends = Friend.objects.filter(Q(user1=user, status="accept") | Q(user2=user, status="accept"))
 
         serialized_friends = FriendListSerializer(friends, many=True, context={'request': request}).data
 
-        return Response({
-            'message': '친구 목록 전송 성공',
-            'data': {
-                'friendList': serialized_friends
-            }
-        })
+        return Response({"message": "친구 목록 전송 성공", "data": {"friendList": serialized_friends}})
 
     def post(self, request, friend_id):
         user = request.user
@@ -116,7 +114,7 @@ class UserFriendView(APIView):
             raise exceptions.FriendNotExists
 
         friendship.delete()
-        return Response({"message": "친구 삭제 성공"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "친구 삭제 성공"}, status=status.HTTP_200_OK)
  
 class FriendAcceptView(APIView):
     permission_classes = [IsAuthenticated]
@@ -134,10 +132,10 @@ class FriendAcceptView(APIView):
         if not friendship:
             raise exceptions.FriendNotExists
 
-        if friendship.status != 'pending':
+        if friendship.status != "pending":
             raise exceptions.FriendAlreadyExists
 
-        serializer = FriendSerializer(friendship, data={'status': 'accept'}, partial=True)
+        serializer = FriendSerializer(friendship, data={"status": "accept"}, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -145,9 +143,10 @@ class FriendAcceptView(APIView):
 
         return Response({"message": "친구 요청 수락 성공"}, status=status.HTTP_200_OK)
 
+
 class FriendRejectView(APIView):
     permission_classes = [IsAuthenticated]
- 
+
     def post(self, request, friend_id):
         user = request.user
         friend = User.objects.filter(user_id=friend_id).first()
@@ -161,7 +160,7 @@ class FriendRejectView(APIView):
         if not friendship:
             raise exceptions.FriendNotExists
 
-        if friendship.status != 'pending':
+        if friendship.status != "pending":
             raise exceptions.FriendAlreadyExists
 
         serializer = FriendSerializer(friendship, data={'status': 'reject'}, partial=True)

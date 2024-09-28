@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   app:
     ports:
-      - "58000:8000"
+      - "58000:8443"
     volumes:
       - ./Space-Pin-Pong:/app
       - /app/entrypoint  # entrypoint.sh의 권한 문제로 바인드 마운트 방지
@@ -18,7 +16,13 @@ services:
       - "55432:5432"
     env_file:
       - ./env/.env.db.local
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data/
 
   redis:
     ports:
       - "56379:6379"
+
+volumes:
+  postgres_data_local:
+  django_logs_local:
