@@ -21,7 +21,7 @@ class UserDeleteSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["nickname", "picture"]
+        fields = ["nickname", "picture", "recommendation"]
 
     def validate_nickname(self, value):
         # 닉네임이 3자 이상 30자 이하인지 확인
@@ -33,6 +33,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             raise exceptions.NicknameFormatInvalid
         return value
 
+    def update(self, instance, validated_data):
+        instance.recommendation += 1
+        instance.save()
+        return instance
 
 class FriendSerializer(serializers.ModelSerializer):
     class Meta:

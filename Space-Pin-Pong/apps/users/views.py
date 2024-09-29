@@ -40,6 +40,18 @@ class UserDeactivateView(APIView):
             return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
+class UserRecommendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, user_id):
+        user = User.objects.filter(user_id=user_id, activated=True).first()
+        if user is None:
+            raise exceptions.UserNotFound
+
+        UserUpdateSerializer(user).update(user, {})
+
+        return Response({"message": "유저 인기도 업데이트 성공"}, status=status.HTTP_200_OK)
+
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser]
@@ -86,8 +98,12 @@ class UserFriendView(APIView):
                 raise exceptions.FriendAlreadyExists
             elif is_friend.status == 'pending':
                 raise exceptions.FriendRequestAlreadySent
-
-        Friend.objects.create(user1=user, user2=friend)
+            elif is_friend.status == 'reject':
+                serializer = FriendSerializer(is_friend, data={"status": "pending"}, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+        else:
+            Friend.objects.create(user1=user, user2=friend)
 
         create_and_send_notifications(friend, user, f'{user.nickname}#{user.user_id}님이 친구 요청을 보냈습니다.', 'alert.request.friend')
 
