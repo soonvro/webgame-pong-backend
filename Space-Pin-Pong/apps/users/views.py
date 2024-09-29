@@ -40,6 +40,18 @@ class UserDeactivateView(APIView):
             return Response({"message": "계정 탈퇴 성공"}, status=status.HTTP_200_OK)
         raise exceptions.InvalidDataProvided
 
+class UserRecommendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, user_id):
+        user = User.objects.filter(user_id=user_id, activated=True).first()
+        if user is None:
+            raise exceptions.UserNotFound
+
+        UserSerializer(user).update(user)
+
+        return Response({"message": "추천 성공"}, status=status.HTTP_200_OK)
+
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser]
