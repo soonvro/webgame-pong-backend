@@ -48,9 +48,9 @@ class UserRecommendView(APIView):
         if user is None:
             raise exceptions.UserNotFound
 
-        UserSerializer(user).update(user)
+        UserUpdateSerializer(user).update(user, {})
 
-        return Response({"message": "추천 성공"}, status=status.HTTP_200_OK)
+        return Response({"message": "유저 인기도 업데이트 성공"}, status=status.HTTP_200_OK)
 
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]

@@ -33,7 +33,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             raise exceptions.NicknameFormatInvalid
         return value
 
-    def update(self, instance):
+    def update(self, instance, validated_data):
         instance.recommendation += 1
         instance.save()
         return instance
